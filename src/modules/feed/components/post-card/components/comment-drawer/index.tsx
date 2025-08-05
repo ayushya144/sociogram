@@ -47,7 +47,7 @@ export default function CommentDrawer({
     return `${Math.floor(diff / 86400000)}d ago`;
   };
 
-  // Close drawer on escape key
+  // Lock background scroll and handle escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -56,13 +56,26 @@ export default function CommentDrawer({
     };
 
     if (isOpen) {
-      document.addEventListener("keydown", handleEscape);
+      // Lock background scroll
       document.body.style.overflow = "hidden";
+      document.body.style.position = "fixed";
+      document.body.style.width = "100%";
+      document.body.style.top = `-${window.scrollY}px`;
+
+      document.addEventListener("keydown", handleEscape);
     }
 
     return () => {
+      if (isOpen) {
+        // Restore background scroll
+        const scrollY = document.body.style.top;
+        document.body.style.overflow = "";
+        document.body.style.position = "";
+        document.body.style.width = "";
+        document.body.style.top = "";
+        window.scrollTo(0, parseInt(scrollY || "0") * -1);
+      }
       document.removeEventListener("keydown", handleEscape);
-      document.body.style.overflow = "unset";
     };
   }, [isOpen, onClose]);
 
@@ -125,7 +138,11 @@ export default function CommentDrawer({
             dragElastic={0.2}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
-            className="fixed bottom-0 left-0 right-0 h-[70vh] bg-white dark:bg-gray-800 rounded-t-3xl z-50 shadow-2xl flex flex-col cursor-grab active:cursor-grabbing"
+            className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 rounded-t-3xl z-50 shadow-2xl flex flex-col cursor-grab active:cursor-grabbing"
+            style={{
+              height: "min(85dvh, 85vh)",
+              maxHeight: "calc(100dvh - env(safe-area-inset-bottom))",
+            }}
           >
             {/* Handle */}
             <div className="flex justify-center pt-3 pb-2 flex-shrink-0">
