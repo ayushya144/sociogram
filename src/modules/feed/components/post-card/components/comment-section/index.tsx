@@ -77,11 +77,14 @@ export default function CommentSection({
               }}
             >
               <div className="flex-shrink-0">
-                <img
-                  src={comment.user.avatar}
-                  alt={comment.user.name}
-                  className="w-8 h-8 rounded-full ring-2 ring-gray-100 dark:ring-gray-600"
-                />
+                <div className="w-8 h-8 rounded-full relative ring-2 ring-gray-100 dark:ring-gray-600">
+                  <Image
+                    src={comment.user.avatar}
+                    alt={comment.user.name}
+                    fill
+                    className="rounded-full object-cover h-full w-full"
+                  />
+                </div>
               </div>
               <div className="flex-1 min-w-0">
                 <div className="bg-gray-50 dark:bg-gray-700 rounded-2xl px-4 py-3">
@@ -115,11 +118,14 @@ export default function CommentSection({
           }}
         >
           <div className="flex-shrink-0">
-            <img
-              src={currentUser.avatar}
-              alt={currentUser.name}
-              className="w-8 h-8 rounded-full ring-2 ring-gray-100 dark:ring-gray-600"
-            />
+            <div className="w-8 h-8 rounded-full relative ring-2 ring-gray-100 dark:ring-gray-600">
+              <Image
+                src={currentUser.avatar}
+                alt={currentUser.name}
+                fill
+                className="rounded-full object-cover h-full w-full"
+              />
+            </div>
           </div>
           <div className="flex-1 relative">
             <input
