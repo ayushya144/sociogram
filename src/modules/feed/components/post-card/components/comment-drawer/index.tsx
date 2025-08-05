@@ -20,6 +20,7 @@ export default function CommentDrawer({
   const resizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined
   );
+  const savedScrollPosition = useRef<number>(0);
 
   const handleSubmitComment = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +32,21 @@ export default function CommentDrawer({
       setLastCommentId(`comment-${Date.now()}`);
     }
   };
+
+  // Function to restore scroll position
+  const restoreScrollPosition = useCallback(() => {
+    document.body.style.overflow = "";
+    document.body.style.position = "";
+    document.body.style.width = "";
+    document.body.style.top = "";
+    window.scrollTo(0, savedScrollPosition.current);
+  }, []);
+
+  // Function to handle drawer close with scroll restoration
+  const handleClose = useCallback(() => {
+    onClose();
+    restoreScrollPosition();
+  }, [restoreScrollPosition, onClose]);
 
   // Auto-scroll to top when new comment is added
   useEffect(() => {
@@ -91,33 +107,31 @@ export default function CommentDrawer({
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        onClose();
+        handleClose();
       }
     };
 
     if (isOpen) {
+      // Store current scroll position
+      savedScrollPosition.current = window.scrollY;
+
       // Lock background scroll
       document.body.style.overflow = "hidden";
       document.body.style.position = "fixed";
       document.body.style.width = "100%";
-      document.body.style.top = `-${window.scrollY}px`;
+      document.body.style.top = `-${savedScrollPosition.current}px`;
 
       document.addEventListener("keydown", handleEscape);
     }
 
     return () => {
       if (isOpen) {
-        // Restore background scroll
-        const scrollY = document.body.style.top;
-        document.body.style.overflow = "";
-        document.body.style.position = "";
-        document.body.style.width = "";
-        document.body.style.top = "";
-        window.scrollTo(0, parseInt(scrollY || "0") * -1);
+        // Restore background scroll if component unmounts while drawer is open
+        restoreScrollPosition();
       }
       document.removeEventListener("keydown", handleEscape);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, handleClose, restoreScrollPosition]);
 
   // Handle drag to close
   const handleDragEnd = (
@@ -129,7 +143,7 @@ export default function CommentDrawer({
     const velocity = info.velocity.y;
 
     if (info.offset.y > threshold || velocity > 500) {
-      onClose();
+      handleClose();
     }
   };
 
@@ -158,7 +172,7 @@ export default function CommentDrawer({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={onClose}
+            onClick={handleClose}
             className="fixed inset-0 bg-black/50 z-40"
           />
 
