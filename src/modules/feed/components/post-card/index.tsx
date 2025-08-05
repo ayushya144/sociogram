@@ -4,25 +4,8 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import CommentDrawer from "./components/comment-drawer";
 import { users } from "../../../../utils/data/posts";
-import { Comment, User } from "@/utils/hooks/usePosts";
 import LikesDrawer from "./components/likes-drawer";
-
-interface Post {
-  id: string;
-  author: User;
-  image: string;
-  caption: string;
-  likes: string[];
-  comments: Comment[];
-  timestamp: number;
-}
-
-interface PostCardProps {
-  post: Post;
-  currentUserId: string;
-  onLikeToggle?: (postId: string, userId: string) => void;
-  onAddComment?: (postId: string, text: string) => void;
-}
+import { PostCardProps } from "../../utils/types";
 
 export default function PostCard({
   post,
