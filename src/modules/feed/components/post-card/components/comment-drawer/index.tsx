@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import Image from "next/image";
 import { CommentDrawerProps } from "./utils/types";
@@ -17,6 +17,9 @@ export default function CommentDrawer({
   const [isDragging, setIsDragging] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
+  const resizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined
+  );
 
   const handleSubmitComment = (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +49,43 @@ export default function CommentDrawer({
     if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
     return `${Math.floor(diff / 86400000)}d ago`;
   };
+
+  // Debounced viewport height calculation
+  const setVH = useCallback(() => {
+    if (resizeTimeoutRef.current) {
+      clearTimeout(resizeTimeoutRef.current);
+    }
+
+    resizeTimeoutRef.current = setTimeout(() => {
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty("--vh", `${vh}px`);
+    }, 100); // 100ms debounce
+  }, []);
+
+  // Set up CSS custom property for viewport height with debouncing
+  useEffect(() => {
+    // Set initial value immediately
+    const vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty("--vh", `${vh}px`);
+
+    // Debounced updates
+    window.addEventListener("resize", setVH);
+
+    // Visual viewport for better keyboard detection
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", setVH);
+    }
+
+    return () => {
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
+      window.removeEventListener("resize", setVH);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener("resize", setVH);
+      }
+    };
+  }, [setVH]);
 
   // Lock background scroll and handle escape key
   useEffect(() => {
@@ -140,8 +180,9 @@ export default function CommentDrawer({
             onDragEnd={handleDragEnd}
             className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 rounded-t-3xl z-50 shadow-2xl flex flex-col cursor-grab active:cursor-grabbing"
             style={{
-              height: "min(85dvh, 85vh)",
-              maxHeight: "calc(100dvh - env(safe-area-inset-bottom))",
+              height: "calc(var(--vh, 1vh) * 85)",
+              maxHeight: "calc(var(--vh, 1vh) * 100)",
+              transition: "height 0.3s ease-out",
             }}
           >
             {/* Handle */}
