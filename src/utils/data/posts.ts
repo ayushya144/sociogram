@@ -4,6 +4,29 @@ export const currentUser = {
   avatar: "https://i.pravatar.cc/150?img=3",
 };
 
+export const users = [
+  {
+    id: "u1",
+    name: "Alice",
+    avatar: "https://i.pravatar.cc/150?img=1",
+  },
+  {
+    id: "u2",
+    name: "Bob",
+    avatar: "https://i.pravatar.cc/150?img=2",
+  },
+  {
+    id: "u3",
+    name: "Charlie",
+    avatar: "https://i.pravatar.cc/150?img=4",
+  },
+  {
+    id: "u123",
+    name: "Ayush",
+    avatar: "https://i.pravatar.cc/150?img=3",
+  },
+];
+
 export const posts = [
   {
     id: "p1",

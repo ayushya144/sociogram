@@ -3,19 +3,9 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import CommentDrawer from "./components/comment-drawer";
-
-interface User {
-  id: string;
-  name: string;
-  avatar: string;
-}
-
-interface Comment {
-  id: string;
-  user: User;
-  text: string;
-  timestamp: number;
-}
+import { users } from "../../../../utils/data/posts";
+import { Comment, User } from "@/utils/hooks/usePosts";
+import LikesDrawer from "./components/likes-drawer";
 
 interface Post {
   id: string;
@@ -41,6 +31,7 @@ export default function PostCard({
   onAddComment,
 }: PostCardProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isLikesDrawerOpen, setIsLikesDrawerOpen] = useState(false);
   const isLiked = post.likes.includes(currentUserId);
 
   const handleLike = () => {
@@ -57,6 +48,14 @@ export default function PostCard({
     setIsDrawerOpen(false);
   };
 
+  const openLikesDrawer = () => {
+    setIsLikesDrawerOpen(true);
+  };
+
+  const closeLikesDrawer = () => {
+    setIsLikesDrawerOpen(false);
+  };
+
   const formatTimestamp = (timestamp: number) => {
     const now = Date.now();
     const diff = now - timestamp;
@@ -67,6 +66,55 @@ export default function PostCard({
     if (diff < 604800000) return `${Math.floor(diff / 86400000)}d ago`;
     if (diff < 2592000000) return `${Math.floor(diff / 604800000)}w ago`;
     return `${Math.floor(diff / 2592000000)}mo ago`;
+  };
+
+  // Get user data by ID
+  const getUserById = (userId: string) => {
+    return users.find((user) => user.id === userId);
+  };
+
+  // Format likes text with clickable "others"
+  const formatLikesText = () => {
+    if (post.likes.length === 0) return "";
+    if (post.likes.length === 1) {
+      const user = getUserById(post.likes[0]);
+      return `Liked by ${user?.name || "Unknown"}`;
+    }
+    if (post.likes.length === 2) {
+      const user1 = getUserById(post.likes[0]);
+      const user2 = getUserById(post.likes[1]);
+      return `Liked by ${user1?.name || "Unknown"} and ${
+        user2?.name || "Unknown"
+      }`;
+    }
+    if (post.likes.length === 3) {
+      const user1 = getUserById(post.likes[0]);
+      const user2 = getUserById(post.likes[1]);
+      return (
+        <>
+          Liked by {user1?.name || "Unknown"}, {user2?.name || "Unknown"} and{" "}
+          <button
+            onClick={openLikesDrawer}
+            className="text-gray-900 dark:text-white hover:underline font-semibold"
+          >
+            1 other
+          </button>
+        </>
+      );
+    }
+    const user1 = getUserById(post.likes[0]);
+    const user2 = getUserById(post.likes[1]);
+    return (
+      <>
+        Liked by {user1?.name || "Unknown"}, {user2?.name || "Unknown"} and{" "}
+        <button
+          onClick={openLikesDrawer}
+          className="text-gray-900 dark:text-white hover:underline font-semibold"
+        >
+          {post.likes.length - 2} others
+        </button>
+      </>
+    );
   };
 
   return (
@@ -160,14 +208,18 @@ export default function PostCard({
             </motion.button>
           </div>
 
-          {/* Likes Count */}
-          <motion.p
-            className="font-semibold text-sm mb-3 text-gray-900 dark:text-white"
-            animate={{ opacity: [0.7, 1] }}
-            transition={{ duration: 0.2 }}
-          >
-            {post.likes.length} {post.likes.length === 1 ? "like" : "likes"}
-          </motion.p>
+          {/* Likes */}
+          {post.likes.length > 0 && (
+            <motion.div
+              className="mb-3"
+              animate={{ opacity: [0.7, 1] }}
+              transition={{ duration: 0.2 }}
+            >
+              <p className="font-semibold text-sm text-gray-900 dark:text-white">
+                {formatLikesText()}
+              </p>
+            </motion.div>
+          )}
 
           {/* Caption */}
           <div className="mb-3">
@@ -182,26 +234,38 @@ export default function PostCard({
           {/* Comment Previews */}
           {post.comments.length > 0 && (
             <div className="border-t border-gray-100 dark:border-gray-700 pt-3 mb-3">
-              {post.comments.slice(0, 2).map((comment) => (
-                <div key={comment.id} className="mb-1">
-                  <span className="font-semibold text-sm mr-2 text-gray-900 dark:text-white">
-                    {comment.user.name}
-                  </span>
-                  <span className="text-sm text-gray-700 dark:text-gray-300">
-                    {comment.text}
-                  </span>
-                </div>
-              ))}
+              {post.comments
+                .slice()
+                .sort((a, b) => b.timestamp - a.timestamp)
+                .slice(0, 2)
+                .map((comment) => (
+                  <div key={comment.id} className="mb-1">
+                    <span className="font-semibold text-sm mr-2 text-gray-900 dark:text-white">
+                      {comment.user.name}
+                    </span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                      {comment.text}
+                    </span>
+                  </div>
+                ))}
               {post.comments.length > 2 && (
                 <button
                   onClick={openDrawer}
-                  className="text-gray-500 dark:text-gray-400 text-sm hover:text-gray-700 dark:hover:text-gray-200 font-medium"
+                  className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-200"
                 >
                   View all {post.comments.length} comments
                 </button>
               )}
             </div>
           )}
+
+          {/* Add Comment Button */}
+          <button
+            onClick={openDrawer}
+            className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-200"
+          >
+            Add a comment...
+          </button>
         </div>
       </motion.div>
 
@@ -210,13 +274,17 @@ export default function PostCard({
         isOpen={isDrawerOpen}
         onClose={closeDrawer}
         comments={post.comments}
-        currentUser={{
-          id: currentUserId,
-          name: "Ayush",
-          avatar: "https://i.pravatar.cc/150?img=3",
-        }}
+        currentUser={getUserById(currentUserId)!}
         onAddComment={onAddComment}
         postId={post.id}
+      />
+
+      {/* Likes Drawer */}
+      <LikesDrawer
+        isOpen={isLikesDrawerOpen}
+        onClose={closeLikesDrawer}
+        likes={post.likes}
+        currentUserId={currentUserId}
       />
     </>
   );
